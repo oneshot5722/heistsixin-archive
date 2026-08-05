@@ -1041,3 +1041,64 @@ text-align:center;
 }
 
 }
+/* =============================
+   JAVASCRIPT EFFECTS
+============================= */
+
+#cursor{
+
+position:fixed;
+
+width:18px;
+
+height:18px;
+
+border:2px solid var(--gold);
+
+border-radius:50%;
+
+pointer-events:none;
+
+transform:translate(-50%,-50%);
+
+transition:.08s;
+
+z-index:99999;
+
+}
+
+.hidden-section{
+
+opacity:0;
+
+transform:translateY(50px);
+
+transition:1s;
+
+}
+
+.visible{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+.nav-scrolled{
+
+background:rgba(10,10,10,.82);
+
+box-shadow:0 25px 60px rgba(0,0,0,.45);
+
+}
+
+@media(pointer:coarse){
+
+#cursor{
+
+display:none;
+
+}
+
+}
