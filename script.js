@@ -1,138 +1,111 @@
-// ==========================================
-// HEISTSIXIN ARCHIVE V2.6
-// ==========================================
+/* ===================================
+   HEISTSIXIN V3
+=================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded",()=>{
 
-    /* -------------------------
-       CUSTOM CURSOR
-    ------------------------- */
+/* ===========================
+   LOADER
+=========================== */
 
-    const cursor = document.getElementById("cursor");
+const loader=document.getElementById("loader");
 
-    document.addEventListener("mousemove", (e) => {
+window.addEventListener("load",()=>{
 
-        if (!cursor) return;
+setTimeout(()=>{
 
-        cursor.style.left = e.clientX + "px";
-        cursor.style.top = e.clientY + "px";
+loader.style.opacity="0";
 
-    });
+loader.style.visibility="hidden";
 
-    const hoverTargets = document.querySelectorAll(
-        "a, button, .book"
-    );
+},2200);
 
-    hoverTargets.forEach(item => {
+});
 
-        item.addEventListener("mouseenter", () => {
+/* ===========================
+   CURSOR
+=========================== */
 
-            cursor.style.width = "36px";
-            cursor.style.height = "36px";
-            cursor.style.borderColor = "#d6b06b";
+const cursor=document.getElementById("cursor");
 
-        });
+if(cursor){
 
-        item.addEventListener("mouseleave", () => {
+document.addEventListener("mousemove",(e)=>{
 
-            cursor.style.width = "18px";
-            cursor.style.height = "18px";
+cursor.style.left=e.clientX+"px";
 
-        });
+cursor.style.top=e.clientY+"px";
 
-    });
+});
 
-    /* -------------------------
-       SCROLL REVEAL
-    ------------------------- */
+}
 
-    const observer = new IntersectionObserver((entries) => {
+/* ===========================
+   SCROLL ANIMATION
+=========================== */
 
-        entries.forEach(entry => {
+const observer=new IntersectionObserver((entries)=>{
 
-            if (entry.isIntersecting) {
+entries.forEach(entry=>{
 
-                entry.target.classList.add("visible");
+if(entry.isIntersecting){
 
-            }
+entry.target.classList.add("visible");
 
-        });
+}
 
-    }, {
+});
 
-        threshold:0.15
+},{
 
-    });
+threshold:.15
 
-    document.querySelectorAll(
+});
 
-        ".section,.book,blockquote"
+document.querySelectorAll(".section,.book-card,.featured-book").forEach(el=>{
 
-    ).forEach(el=>{
+el.classList.add("hidden-section");
 
-        observer.observe(el);
+observer.observe(el);
 
-    });
+});
 
-    /* -------------------------
-       BOOK CARD TILT
-    ------------------------- */
+/* ===========================
+   NAV SHADOW
+=========================== */
 
-    document.querySelectorAll(".book").forEach(card=>{
+window.addEventListener("scroll",()=>{
 
-        card.addEventListener("mousemove",(e)=>{
+const nav=document.querySelector("nav");
 
-            const rect=card.getBoundingClientRect();
+if(window.scrollY>40){
 
-            const x=e.clientX-rect.left;
+nav.classList.add("nav-scrolled");
 
-            const y=e.clientY-rect.top;
+}else{
 
-            const rotateY=(x-rect.width/2)/18;
+nav.classList.remove("nav-scrolled");
 
-            const rotateX=-(y-rect.height/2)/18;
+}
 
-            card.style.transform=
+});
 
-            `perspective(900px)
-             rotateX(${rotateX}deg)
-             rotateY(${rotateY}deg)
-             translateY(-8px)`;
+/* ===========================
+   HERO PARALLAX
+=========================== */
 
-        });
+const hero=document.querySelector(".hero-gradient");
 
-        card.addEventListener("mouseleave",()=>{
+document.addEventListener("mousemove",(e)=>{
 
-            card.style.transform="";
+if(!hero)return;
 
-        });
+const x=(e.clientX/window.innerWidth-.5)*30;
 
-    });
+const y=(e.clientY/window.innerHeight-.5)*30;
 
-    /* -------------------------
-       SMOOTH NAV SHADOW
-    ------------------------- */
+hero.style.transform=`translate(${x}px,${y}px)`;
 
-    const nav=document.querySelector("nav");
-
-    window.addEventListener("scroll",()=>{
-
-        if(window.scrollY>50){
-
-            nav.style.background="rgba(4,4,4,.85)";
-            nav.style.boxShadow="0 10px 40px rgba(0,0,0,.4)";
-
-        }
-
-        else{
-
-            nav.style.background="rgba(4,4,4,.45)";
-            nav.style.boxShadow="none";
-
-        }
-
-    });
-
-    console.log("HEISTSIXIN V2.6");
+});
 
 });
