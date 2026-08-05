@@ -822,5 +822,23 @@ footer h2{
     }
 
 }
+.book{
 
+    text-decoration:none;
+
+    color:inherit;
+
+}
+
+.book:visited{
+
+    color:inherit;
+
+}
+
+.book:hover{
+
+    text-decoration:none;
+
+}
 /* End of V2.5 */
