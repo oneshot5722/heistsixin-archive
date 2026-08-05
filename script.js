@@ -1,23 +1,29 @@
+// ===============================
+// HEISTSIXIN ARCHIVE V2
+// ===============================
+
 document.addEventListener("DOMContentLoaded", () => {
 
-    // ==========================
+    // -------------------------------
     // Custom Cursor
-    // ==========================
+    // -------------------------------
 
     const cursor = document.getElementById("cursor");
 
     document.addEventListener("mousemove", (e) => {
 
         if (cursor) {
+
             cursor.style.left = e.clientX + "px";
             cursor.style.top = e.clientY + "px";
+
         }
 
     });
 
-    // ==========================
-    // Fade-in Animation
-    // ==========================
+    // -------------------------------
+    // Scroll Reveal
+    // -------------------------------
 
     const observer = new IntersectionObserver((entries) => {
 
@@ -25,62 +31,50 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (entry.isIntersecting) {
 
-                entry.target.animate(
-
-                    [
-                        {
-                            opacity: 0,
-                            transform: "translateY(40px)"
-                        },
-
-                        {
-                            opacity: 1,
-                            transform: "translateY(0px)"
-                        }
-
-                    ],
-
-                    {
-                        duration: 800,
-                        fill: "forwards",
-                        easing: "ease-out"
-                    }
-
-                );
-
-                observer.unobserve(entry.target);
+                entry.target.style.opacity = "1";
+                entry.target.style.transform = "translateY(0px)";
 
             }
 
         });
 
+    }, {
+
+        threshold: 0.15
+
     });
 
     document.querySelectorAll(".section, .book").forEach((element) => {
+
+        element.style.opacity = "0";
+        element.style.transform = "translateY(40px)";
+        element.style.transition = "0.8s ease";
+
         observer.observe(element);
-    });
-
-    // ==========================
-    // Book Hover Glow
-    // ==========================
-
-    document.querySelectorAll(".book").forEach((book) => {
-
-        book.addEventListener("mouseenter", () => {
-
-            book.style.boxShadow =
-                "0 0 35px rgba(217,192,138,0.18)";
-
-        });
-
-        book.addEventListener("mouseleave", () => {
-
-            book.style.boxShadow = "none";
-
-        });
 
     });
 
-    console.log("HEISTSIXIN ARCHIVE loaded.");
+    // -------------------------------
+    // Smooth Hover Glow
+    // -------------------------------
+
+    document.querySelectorAll(".book").forEach((card) => {
+
+        card.addEventListener("mouseenter", () => {
+
+            card.style.boxShadow =
+                "0 20px 40px rgba(212,176,106,.18)";
+
+        });
+
+        card.addEventListener("mouseleave", () => {
+
+            card.style.boxShadow = "none";
+
+        });
+
+    });
+
+    console.log("HEISTSIXIN ARCHIVE V2 Loaded");
 
 });
