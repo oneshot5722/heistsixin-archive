@@ -6,25 +6,80 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>HEIST SIXIN ARCHIVE</title>
+<title>HEISTSIXIN — Before We Vanish</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="description"
+content="Independent writing archive by Rawhaan.">
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect"
+href="https://fonts.googleapis.com">
 
-<link rel="stylesheet" href="style.css">
+<link rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+rel="stylesheet">
+
+<link rel="stylesheet"
+href="style.css">
 
 </head>
 
 <body>
 
-<div class="cursor" id="cursor"></div>
+<!-- =========================
+     LOADER
+========================== -->
+
+<div id="loader">
+
+<div class="loader-inner">
+
+<p class="loader-small">
+
+HEISTSIXIN
+
+</p>
+
+<h1>
+
+BEFORE WE VANISH
+
+</h1>
+
+<div class="loader-bar">
+
+<div class="loader-progress"></div>
+
+</div>
+
+<p class="loader-status">
+
+Preparing the archive...
+
+</p>
+
+</div>
+
+</div>
+
+<!-- =========================
+     ATMOSPHERE
+========================== -->
 
 <div class="noise"></div>
 
-<div class="smoke"></div>
-<div class="smoke second"></div>
+<div class="fog fog-1"></div>
+<div class="fog fog-2"></div>
+
+<div id="cursor"></div>
+
+<!-- =========================
+     NAVIGATION
+========================== -->
+
+<header>
 
 <nav>
 
@@ -37,18 +92,28 @@ HEISTSIXIN
 <ul>
 
 <li><a href="#about">About</a></li>
+
 <li><a href="#archive">Archive</a></li>
+
 <li><a href="#contact">Contact</a></li>
 
 </ul>
 
 </nav>
 
+</header>
+
+<!-- =========================
+     HERO
+========================== -->
+
 <section class="hero">
+
+<div class="hero-overlay"></div>
 
 <div class="hero-content">
 
-<p class="archive-tag">
+<p class="hero-label">
 
 HEISTSIXIN ARCHIVE
 
@@ -56,61 +121,127 @@ HEISTSIXIN ARCHIVE
 
 <h1>
 
-BEFORE WE VANISH
+BEFORE<br>
+WE<br>
+VANISH
 
 </h1>
 
-<p class="hero-subtitle">
+<p class="hero-description">
 
-Twenty poems.
+Twenty poems exploring memory,
+grief, faith, longing,
+and everything left unsaid.
 
 </p>
 
-<a href="#archive" class="enter-btn">
+<div class="hero-buttons">
+
+<a href="#archive"
+class="primary-btn">
 
 Open Archive
 
 </a>
 
+<a href="#about"
+class="secondary-btn">
+
+Learn More
+
+</a>
+
+</div>
+
 </div>
 
 </section>
 
-<section class="section" id="about">
+<!-- =========================
+     ABOUT
+========================== -->
+
+<section
+class="section"
+id="about">
+
+<div class="section-header">
+
+<p>
+
+ABOUT
+
+</p>
 
 <h2>
 
-About
+A Quiet Archive
 
 </h2>
+
+</div>
 
 <div class="divider"></div>
 
 <p class="about-text">
 
-Before We Vanish is a collection of twenty poems.
+Before We Vanish is the first collection published under
+<strong>HEISTSIXIN</strong>.
+
+Built around twenty poems, the collection explores memory,
+identity, grief, hope, and the quiet moments that shape us.
+
+Rather than telling one story, each poem stands on its own
+while belonging to the same conversation.
 
 </p>
 
 <blockquote>
 
-Some things survive only because someone chose to write them down.
+"Some things disappear.
+Some remain because someone chose to write them down."
 
 </blockquote>
 
 </section>
 
-<section class="section" id="archive">
+<!-- =========================
+     ARCHIVE
+========================== -->
+
+<section
+class="section"
+id="archive">
+
+<div class="section-header">
+
+<p>
+
+ARCHIVE
+
+</p>
 
 <h2>
 
-Archive
+Collections
 
 </h2>
+
+</div>
 
 <div class="divider"></div>
 
 <div class="books"><a href="books/before-we-vanish.html" class="book">
+
+<div class="book-glow"></div>
+
+<div class="book-content">
+
+<p class="book-category">
+
+Collection I
+
+</p>
 
 <h3>
 
@@ -118,15 +249,31 @@ Before We Vanish
 
 </h3>
 
-<p>
+<p class="book-meta">
 
 20 Poems
 
 </p>
 
+<span class="book-link">
+
+Open →
+
+</span>
+
+</div>
+
 </a>
 
-<div class="book">
+<div class="book disabled">
+
+<div class="book-content">
+
+<p class="book-category">
+
+Collection II
+
+</p>
 
 <h3>
 
@@ -134,7 +281,7 @@ Everyone
 
 </h3>
 
-<p>
+<p class="book-meta">
 
 Coming Soon
 
@@ -142,19 +289,31 @@ Coming Soon
 
 </div>
 
-<div class="book">
+</div>
 
-<h3>
+<div class="book disabled">
+
+<div class="book-content">
+
+<p class="book-category">
 
 Notebook
 
+</p>
+
+<h3>
+
+Fragments
+
 </h3>
 
-<p>
+<p class="book-meta">
 
-Future Writings
+Future writings
 
 </p>
+
+</div>
 
 </div>
 
@@ -162,23 +321,119 @@ Future Writings
 
 </section>
 
-<section class="section" id="contact">
+<!-- =========================
+     FEATURE
+========================== -->
+
+<section class="section feature">
+
+<div class="feature-grid">
+
+<div class="feature-left">
+
+<p class="feature-label">
+
+FEATURED COLLECTION
+
+</p>
+
+<h2>
+
+Before We Vanish
+
+</h2>
+
+<p>
+
+A quiet collection of twenty poems written across different
+moments in time, gathered into one archive.
+
+Every page is meant to be read slowly.
+
+</p>
+
+<a href="books/before-we-vanish.html"
+
+class="primary-btn">
+
+Explore Collection
+
+</a>
+
+</div>
+
+<div class="feature-right">
+
+<div class="book-preview">
+
+<div class="preview-cover">
+
+<h2>
+
+BEFORE<br>
+WE<br>
+VANISH
+
+</h2>
+
+<p>
+
+20 Poems
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- =========================
+     CONTACT
+========================== -->
+
+<section
+class="section"
+id="contact">
+
+<div class="section-header">
+
+<p>
+
+CONTACT
+
+</p>
 
 <h2>
 
 HEISTSIXIN
 
 </h2>
+
+</div>
 
 <div class="divider"></div>
 
 <p class="about-text">
 
-Independent writing archive.
+An independent archive of writing by Rawhaan.
+
+This website will continue to grow as new collections,
+fragments, and future works are released.
 
 </p></section>
 
+<!-- =========================
+     FOOTER
+========================== -->
+
 <footer>
+
+<div class="footer-inner">
 
 <h2>
 
@@ -188,15 +443,17 @@ HEISTSIXIN
 
 <p>
 
-CHOTU PAGAL HAI
+Independent Writing Archive
 
 </p>
 
-<p>
+<p class="footer-small">
 
-© 2026
+© 2026 Rawhaan
 
 </p>
+
+</div>
 
 </footer>
 
