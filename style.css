@@ -93,50 +93,53 @@ background-image:url("https://grainy-gradients.vercel.app/noise.svg");
 z-index:-5;
 
 }
-
 .fog{
 
 position:fixed;
 
-width:900px;
+width:1200px;
 
-height:900px;
+height:1200px;
 
 border-radius:50%;
 
-filter:blur(140px);
+filter:blur(180px);
 
-opacity:.12;
+opacity:.16;
 
-animation:floating 22s ease-in-out infinite;
+pointer-events:none;
 
-z-index:-4;
+mix-blend-mode:screen;
+
+animation:fogFloat 28s ease-in-out infinite;
+
+z-index:-5;
 
 }
 
 .fog-one{
 
-background:#8f6d34;
+background:rgba(214,176,107,.12);
 
-top:-250px;
+top:-400px;
 
-left:-250px;
+left:-300px;
 
 }
 
 .fog-two{
 
-background:#222;
+background:rgba(120,120,120,.08);
 
-right:-250px;
+bottom:-450px;
 
-bottom:-250px;
+right:-350px;
 
-animation-delay:8s;
+animation-delay:12s;
 
 }
 
-@keyframes floating{
+@keyframes fogFloat{
 
 0%,100%{
 
@@ -144,9 +147,21 @@ transform:translate(0,0);
 
 }
 
-50%{
+25%{
 
 transform:translate(80px,-60px);
+
+}
+
+50%{
+
+transform:translate(-40px,80px);
+
+}
+
+75%{
+
+transform:translate(100px,40px);
 
 }
 
