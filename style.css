@@ -1605,3 +1605,40 @@ opacity:0;
 }
 
 }
+/* ===========================
+   MOUSE SPOTLIGHT
+=========================== */
+
+body::after{
+
+content:"";
+
+position:fixed;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:100%;
+
+pointer-events:none;
+
+background:
+
+radial-gradient(
+
+600px circle at var(--mouse-x,50%) var(--mouse-y,50%),
+
+rgba(214,176,107,.06),
+
+transparent 70%
+
+);
+
+z-index:-2;
+
+transition:background .08s linear;
+
+}
