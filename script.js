@@ -2,142 +2,123 @@
    HEISTSIXIN V3
 =================================== */
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
 
-/* ===========================
-   LOADER
-=========================== */
+    /* ===========================
+       LOADER
+    =========================== */
 
-const loader=document.getElementById("loader");
+    const loader = document.getElementById("loader");
 
-window.addEventListener("load",()=>{
+    window.addEventListener("load", () => {
+        if (loader) {
+            setTimeout(() => {
+                loader.style.opacity = "0";
+                loader.style.visibility = "hidden";
+            }, 2200);
+        }
+    });
 
-setTimeout(()=>{
+    /* ===========================
+       CUSTOM CURSOR
+    =========================== */
 
-loader.style.opacity="0";
+    const cursor = document.getElementById("cursor");
 
-loader.style.visibility="hidden";
+    if (cursor) {
+        document.addEventListener("mousemove", (e) => {
+            cursor.style.left = e.clientX + "px";
+            cursor.style.top = e.clientY + "px";
+        });
+    }
 
-},2200);
+    /* ===========================
+       SCROLL ANIMATIONS
+    =========================== */
 
-});
+    const observer = new IntersectionObserver((entries) => {
 
-/* ===========================
-   CURSOR
-=========================== */
+        entries.forEach(entry => {
 
-const cursor=document.getElementById("cursor");
+            if (entry.isIntersecting) {
+                entry.target.classList.add("visible");
+            }
 
-if(cursor){
+        });
 
-document.addEventListener("mousemove",(e)=>{
+    }, {
+        threshold: 0.15
+    });
 
-cursor.style.left=e.clientX+"px";
+    document.querySelectorAll(".section,.book-card,.featured-book").forEach(el => {
+        el.classList.add("hidden-section");
+        observer.observe(el);
+    });
 
-cursor.style.top=e.clientY+"px";
+    /* ===========================
+       NAVBAR
+    =========================== */
 
-});
+    const nav = document.querySelector("nav");
 
-}
+    window.addEventListener("scroll", () => {
 
-/* ===========================
-   SCROLL ANIMATION
-=========================== */
+        if (!nav) return;
 
-const observer=new IntersectionObserver((entries)=>{
+        if (window.scrollY > 40) {
+            nav.classList.add("nav-scrolled");
+        } else {
+            nav.classList.remove("nav-scrolled");
+        }
 
-entries.forEach(entry=>{
+    });
 
-if(entry.isIntersecting){
+    /* ===========================
+       HERO PARALLAX
+    =========================== */
 
-entry.target.classList.add("visible");
+    const hero = document.querySelector(".hero-gradient");
 
-}
+    document.addEventListener("mousemove", (e) => {
 
-});
+        if (!hero) return;
 
-},{
+        const x = (e.clientX / window.innerWidth - 0.5) * 30;
+        const y = (e.clientY / window.innerHeight - 0.5) * 30;
 
-threshold:.15
+        hero.style.transform = `translate(${x}px, ${y}px)`;
 
-});
+    });
 
-document.querySelectorAll(".section,.book-card,.featured-book").forEach(el=>{
+    /* ===========================
+       FLOATING PARTICLES
+    =========================== */
 
-el.classList.add("hidden-section");
+    const particleContainer = document.getElementById("particles");
 
-observer.observe(el);
+    if (particleContainer) {
 
-});
+        for (let i = 0; i < 60; i++) {
 
-/* ===========================
-   NAV SHADOW
-=========================== */
+            const p = document.createElement("div");
 
-window.addEventListener("scroll",()=>{
+            p.className = "particle";
 
-const nav=document.querySelector("nav");
+            p.style.left = Math.random() * 100 + "%";
 
-if(window.scrollY>40){
+            const size = Math.random() * 3 + 1;
 
-nav.classList.add("nav-scrolled");
+            p.style.width = size + "px";
+            p.style.height = size + "px";
 
-}else{
+            p.style.animationDuration = (15 + Math.random() * 20) + "s";
+            p.style.animationDelay = (-Math.random() * 20) + "s";
+            p.style.opacity = Math.random() * 0.8 + 0.2;
 
-nav.classList.remove("nav-scrolled");
+            particleContainer.appendChild(p);
 
-}
+        }
 
-});
-
-/* ===========================
-   HERO PARALLAX
-=========================== */
-
-const hero=document.querySelector(".hero-gradient");
-
-document.addEventListener("mousemove",(e)=>{
-
-if(!hero)return;
-
-const x=(e.clientX/window.innerWidth-.5)*30;
-
-const y=(e.clientY/window.innerHeight-.5)*30;
-
-hero.style.transform=`translate(${x}px,${y}px)`;
-   /* ===========================
-   FLOATING PARTICLES
-=========================== */
-
-const particleContainer=document.getElementById("particles");
-
-if(particleContainer){
-
-for(let i=0;i<60;i++){
-
-const p=document.createElement("div");
-
-p.className="particle";
-
-p.style.left=Math.random()*100+"%";
-
-const size=Math.random()*3+1;
-
-p.style.width=size+"px";
-
-p.style.height=size+"px";
-
-p.style.animationDuration=(15+Math.random()*20)+"s";
-
-p.style.animationDelay=(-Math.random()*20)+"s";
-
-p.style.opacity=Math.random()*0.8+0.2;
-
-particleContainer.appendChild(p);
-
-}
-
-}
+    }
 
 });
-
