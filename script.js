@@ -105,6 +105,39 @@ const x=(e.clientX/window.innerWidth-.5)*30;
 const y=(e.clientY/window.innerHeight-.5)*30;
 
 hero.style.transform=`translate(${x}px,${y}px)`;
+   /* ===========================
+   FLOATING PARTICLES
+=========================== */
+
+const particleContainer=document.getElementById("particles");
+
+if(particleContainer){
+
+for(let i=0;i<60;i++){
+
+const p=document.createElement("div");
+
+p.className="particle";
+
+p.style.left=Math.random()*100+"%";
+
+const size=Math.random()*3+1;
+
+p.style.width=size+"px";
+
+p.style.height=size+"px";
+
+p.style.animationDuration=(15+Math.random()*20)+"s";
+
+p.style.animationDelay=(-Math.random()*20)+"s";
+
+p.style.opacity=Math.random()*0.8+0.2;
+
+particleContainer.appendChild(p);
+
+}
+
+}
 
 });
 
