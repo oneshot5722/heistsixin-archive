@@ -129,6 +129,36 @@ document.addEventListener("mousemove",(e)=>{
 document.body.style.setProperty("--mouse-x",e.clientX+"px");
 
 document.body.style.setProperty("--mouse-y",e.clientY+"px");
+   /* ===================================
+   BOOK OPENING
+=================================== */
+
+const openBook=document.getElementById("openBook");
+
+const pageTransition=document.getElementById("pageTransition");
+
+if(openBook){
+
+openBook.addEventListener("click",(e)=>{
+
+e.preventDefault();
+
+openBook.classList.add("opening");
+
+if(pageTransition){
+
+pageTransition.classList.add("active");
+
+}
+
+setTimeout(()=>{
+
+window.location.href=openBook.href;
+
+},850);
 
 });
+
+}
+
 });
