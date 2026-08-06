@@ -1538,3 +1538,70 @@ opacity:1;
 }
 
 }
+/* =============================
+   FLOATING PARTICLES
+============================= */
+
+#particles{
+
+position:fixed;
+
+inset:0;
+
+pointer-events:none;
+
+overflow:hidden;
+
+z-index:-3;
+
+}
+
+.particle{
+
+position:absolute;
+
+width:2px;
+
+height:2px;
+
+border-radius:50%;
+
+background:rgba(214,176,107,.8);
+
+box-shadow:0 0 10px rgba(214,176,107,.6);
+
+animation:particleFloat linear infinite;
+
+}
+
+@keyframes particleFloat{
+
+0%{
+
+transform:translateY(100vh);
+
+opacity:0;
+
+}
+
+10%{
+
+opacity:1;
+
+}
+
+90%{
+
+opacity:1;
+
+}
+
+100%{
+
+transform:translateY(-10vh);
+
+opacity:0;
+
+}
+
+}
