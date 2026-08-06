@@ -141,4 +141,3 @@ particleContainer.appendChild(p);
 
 });
 
-});
