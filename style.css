@@ -1642,3 +1642,38 @@ z-index:-2;
 transition:background .08s linear;
 
 }
+/* ===========================
+   HERO INTRO
+=========================== */
+
+.hero-container{
+
+opacity:0;
+
+transform:translateY(35px);
+
+animation:heroReveal 1.3s ease forwards;
+
+animation-delay:.4s;
+
+}
+
+@keyframes heroReveal{
+
+from{
+
+opacity:0;
+
+transform:translateY(35px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+}
