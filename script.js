@@ -11,12 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const loader = document.getElementById("loader");
 
     window.addEventListener("load", () => {
-        if (loader) {
-            setTimeout(() => {
-                loader.style.opacity = "0";
-                loader.style.visibility = "hidden";
-            }, 2200);
-        }
+
+        if (!loader) return;
+
+        setTimeout(() => {
+
+            loader.style.opacity = "0";
+            loader.style.visibility = "hidden";
+
+        }, 2200);
+
     });
 
     /* ===========================
@@ -26,14 +30,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const cursor = document.getElementById("cursor");
 
     if (cursor) {
+
         document.addEventListener("mousemove", (e) => {
+
             cursor.style.left = e.clientX + "px";
             cursor.style.top = e.clientY + "px";
+
         });
+
     }
 
     /* ===========================
-       SCROLL ANIMATIONS
+       SCROLL REVEAL
     =========================== */
 
     const observer = new IntersectionObserver((entries) => {
@@ -41,18 +49,25 @@ document.addEventListener("DOMContentLoaded", () => {
         entries.forEach(entry => {
 
             if (entry.isIntersecting) {
+
                 entry.target.classList.add("visible");
+
             }
 
         });
 
     }, {
+
         threshold: 0.15
+
     });
 
     document.querySelectorAll(".section,.book-card,.featured-book").forEach(el => {
+
         el.classList.add("hidden-section");
+
         observer.observe(el);
+
     });
 
     /* ===========================
@@ -66,9 +81,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!nav) return;
 
         if (window.scrollY > 40) {
+
             nav.classList.add("nav-scrolled");
+
         } else {
+
             nav.classList.remove("nav-scrolled");
+
         }
 
     });
@@ -79,16 +98,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const hero = document.querySelector(".hero-gradient");
 
-    document.addEventListener("mousemove", (e) => {
+    if (hero) {
 
-        if (!hero) return;
+        document.addEventListener("mousemove", (e) => {
 
-        const x = (e.clientX / window.innerWidth - 0.5) * 30;
-        const y = (e.clientY / window.innerHeight - 0.5) * 30;
+            const x = (e.clientX / window.innerWidth - 0.5) * 30;
+            const y = (e.clientY / window.innerHeight - 0.5) * 30;
 
-        hero.style.transform = `translate(${x}px, ${y}px)`;
+            hero.style.transform = `translate(${x}px, ${y}px)`;
 
-    });
+        });
+
+    }
 
     /* ===========================
        FLOATING PARTICLES
@@ -120,45 +141,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
     }
-/* ===========================
-   MOUSE SPOTLIGHT
-=========================== */
 
-document.addEventListener("mousemove",(e)=>{
+    /* ===========================
+       MOUSE SPOTLIGHT
+    =========================== */
 
-document.body.style.setProperty("--mouse-x",e.clientX+"px");
+    document.addEventListener("mousemove", (e) => {
 
-document.body.style.setProperty("--mouse-y",e.clientY+"px");
-   /* ===================================
-   BOOK OPENING
-=================================== */
+        document.body.style.setProperty("--mouse-x", e.clientX + "px");
+        document.body.style.setProperty("--mouse-y", e.clientY + "px");
 
-const openBook=document.getElementById("openBook");
+    });
 
-const pageTransition=document.getElementById("pageTransition");
+    /* ===========================
+       BOOK OPENING
+    =========================== */
 
-if(openBook){
+    const openBook = document.getElementById("openBook");
+    const pageTransition = document.getElementById("pageTransition");
 
-openBook.addEventListener("click",(e)=>{
+    if (openBook) {
 
-e.preventDefault();
+        openBook.addEventListener("click", (e) => {
 
-openBook.classList.add("opening");
+            e.preventDefault();
 
-if(pageTransition){
+            openBook.classList.add("opening");
 
-pageTransition.classList.add("active");
+            if (pageTransition) {
 
-}
+                pageTransition.classList.add("active");
 
-setTimeout(()=>{
+            }
 
-window.location.href=openBook.href;
+            setTimeout(() => {
 
-},850);
+                window.location.href = openBook.href;
 
-});
+            }, 850);
 
-}
+        });
+
+    }
 
 });
