@@ -1677,3 +1677,74 @@ transform:translateY(0);
 }
 
 }
+/* ==========================================
+   BOOK OPENING TRANSITION
+========================================== */
+
+#pageTransition{
+
+position:fixed;
+
+inset:0;
+
+background:#050505;
+
+opacity:0;
+
+visibility:hidden;
+
+pointer-events:none;
+
+transition:
+opacity .8s ease,
+visibility .8s ease;
+
+z-index:9999;
+
+}
+
+#pageTransition.active{
+
+opacity:1;
+
+visibility:visible;
+
+}
+
+#openBook{
+
+transform-origin:center;
+
+transition:
+
+transform .8s cubic-bezier(.22,1,.36,1),
+
+filter .8s,
+
+box-shadow .8s;
+
+will-change:transform;
+
+}
+
+#openBook.opening{
+
+transform:
+
+perspective(1800px)
+
+rotateY(-12deg)
+
+rotateX(5deg)
+
+translateY(-12px)
+
+scale(1.12);
+
+filter:
+
+brightness(1.15)
+
+drop-shadow(0 35px 90px rgba(214,176,107,.35));
+
+}
