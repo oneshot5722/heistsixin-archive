@@ -1748,3 +1748,149 @@ brightness(1.15)
 drop-shadow(0 35px 90px rgba(214,176,107,.35));
 
 }
+/* ==========================================
+   BEFORE WE VANISH — BOOK FOUNDATION
+========================================== */
+
+.book-wrapper {
+    position: relative;
+    width: min(1100px, 92%);
+    margin: 0 auto;
+    padding: 100px 0;
+    z-index: 2;
+}
+
+/* Book pages */
+
+.title-page,
+.dedication-page,
+.contents-page,
+.poem-page,
+.author-note,
+.book-ending {
+    position: relative;
+    min-height: 85vh;
+    margin: 0 auto 80px;
+    padding: 110px clamp(30px, 8vw, 120px);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,0.035),
+            rgba(255,255,255,0.012)
+        ),
+        #11100e;
+    border: 1px solid rgba(214,176,107,0.16);
+    box-shadow:
+        0 35px 100px rgba(0,0,0,0.45),
+        inset 0 0 80px rgba(214,176,107,0.025);
+    overflow: hidden;
+}
+
+/* Subtle inner page border */
+
+.title-page::before,
+.dedication-page::before,
+.contents-page::before,
+.poem-page::before,
+.author-note::before,
+.book-ending::before {
+    content: "";
+    position: absolute;
+    inset: 18px;
+    border: 1px solid rgba(214,176,107,0.07);
+    pointer-events: none;
+}
+
+/* Soft golden atmosphere */
+
+.title-page::after {
+    content: "";
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        circle,
+        rgba(214,176,107,0.10),
+        transparent 68%
+    );
+    filter: blur(20px);
+    pointer-events: none;
+}
+
+/* ==========================================
+   TITLE PAGE
+========================================== */
+
+.title-page {
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.book-brand {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 42px;
+    font-family: "Inter", sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.45em;
+    color: #d6b06b;
+}
+
+.book-main-title {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    max-width: 800px;
+    font-family: "Cinzel", serif;
+    font-size: clamp(48px, 8vw, 105px);
+    line-height: 0.95;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    color: #f4efe6;
+    text-shadow:
+        0 0 35px rgba(214,176,107,0.08);
+}
+
+.book-subtitle {
+    position: relative;
+    z-index: 2;
+    margin: 38px 0 28px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #8a857b;
+}
+
+.book-divider {
+    position: relative;
+    z-index: 2;
+    width: 90px;
+    height: 1px;
+    margin: 20px auto;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        #d6b06b,
+        transparent
+    );
+}
+
+.book-author {
+    position: relative;
+    z-index: 2;
+    margin-top: 22px;
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    color: #a9a397;
+    text-transform: uppercase;
+}
