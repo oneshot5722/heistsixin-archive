@@ -1,99 +1,33 @@
-/*
-=========================================================
- HEISTSIXIN — ANALYTICS ENGINE
- V1.0
-=========================================================
-
- Collects normal website analytics:
-
- SERVER-SIDE
- - Public IP
- - Country
- - Region
- - City
- - Postal code
- - Latitude / longitude
- - Timezone
- - Vercel region
- - Host
- - Protocol
- - Referrer
- - User-Agent
- - Request ID / Vercel ID
-
- CLIENT-SIDE
- - Anonymous visitor ID
- - Page
- - Page title
- - Referrer
- - Language
- - Languages
- - Screen size
- - Viewport size
- - Timezone
- - Platform
- - User-Agent
- - Online status
- - Cookies enabled
- - Touch points
- - Hardware concurrency
- - Device memory where available
- - Network information where available
- - Timestamp
-
- NOTE:
- This endpoint does NOT request GPS location,
- camera, microphone, contacts, files, passwords,
- or other private device data.
-=========================================================
-*/
-
 export default async function handler(req, res) {
 
-    /* =====================================================
-       METHOD CHECK
-    ===================================================== */
-
     if (req.method !== "POST") {
-
         return res.status(405).json({
             success: false,
             error: "Method not allowed"
         });
-
     }
-
 
     try {
 
-        /* =================================================
-           REQUEST HEADERS
-        ================================================= */
-
         const headers = req.headers || {};
+        const data = req.body || {};
 
+        /* ===========================
+           CLIENT IP
+        =========================== */
 
-        /* =================================================
-           PUBLIC IP
-
-           Vercel documents x-forwarded-for as the
-           public IP of the client.
-        ================================================= */
-
-        const forwardedFor =
+        const forwarded =
             headers["x-forwarded-for"];
 
-        const ip =
-            forwardedFor
-                ? forwardedFor.split(",")[0].trim()
-                : null;
+        const ip = forwarded
+            ? forwarded.split(",")[0].trim()
+            : null;
 
 
-        /* =================================================
-           VERCEL GEOLOCATION
-
-           These are IP-derived and therefore approximate.
-        ================================================= */
+        /* ===========================
+           VERCEL GEO
+           IP-derived and approximate
+        =========================== */
 
         const geo = {
 
@@ -104,98 +38,116 @@ export default async function handler(req, res) {
                 headers["x-vercel-ip-country-region"] || null,
 
             city:
-                headers["x-vercel-ip-city"] || null,
+                headers["x-vercel-ip-city"]
+                    ? decodeURIComponent(
+                        headers["x-vercel-ip-city"]
+                    )
+                    : null,
 
             postalCode:
-                headers["x-vercel-ip-postal-code"] || null,
+                headers["x-vercel-ip-postal-code"] ||
+                null,
 
             latitude:
-                headers["x-vercel-ip-latitude"] || null,
+                headers["x-vercel-ip-latitude"] ||
+                null,
 
             longitude:
-                headers["x-vercel-ip-longitude"] || null,
+                headers["x-vercel-ip-longitude"] ||
+                null,
 
             timezone:
-                headers["x-vercel-ip-timezone"] || null,
+                headers["x-vercel-ip-timezone"] ||
+                null,
 
             continent:
-                headers["x-vercel-ip-continent"] || null
-
+                headers["x-vercel-ip-continent"] ||
+                null
         };
 
 
-        /* =================================================
-           VERCEL REQUEST INFORMATION
-        ================================================= */
+        /* ===========================
+           IPINFO LITE
+        =========================== */
 
-        const infrastructure = {
+        let network = null;
 
-            vercelId:
-                headers["x-vercel-id"] || null,
+        const token =
+            process.env.IPINFO_TOKEN;
 
-            deploymentUrl:
-                headers["x-vercel-deployment-url"] || null,
+        if (ip && token) {
 
-            host:
-                headers["host"] || null,
+            try {
 
-            forwardedHost:
-                headers["x-forwarded-host"] || null,
+                const response = await fetch(
+                    `https://api.ipinfo.io/lite/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`
+                );
 
-            protocol:
-                headers["x-forwarded-proto"] || null,
+                if (response.ok) {
 
-            vercelRegion:
-                headers["x-vercel-region"] || null
+                    const info =
+                        await response.json();
 
-        };
+                    network = {
+
+                        ip:
+                            info.ip || ip,
+
+                        asn:
+                            info.asn || null,
+
+                        organization:
+                            info.as_name || null,
+
+                        domain:
+                            info.as_domain || null,
+
+                        country:
+                            info.country || null,
+
+                        countryCode:
+                            info.country_code || null,
+
+                        continent:
+                            info.continent || null,
+
+                        continentCode:
+                            info.continent_code || null
+
+                    };
+
+                } else {
+
+                    console.error(
+                        "IPinfo error:",
+                        response.status
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "IPinfo request failed:",
+                    error.message
+                );
+
+            }
+
+        }
 
 
-        /* =================================================
-           USER AGENT
-
-           Browser sends this automatically.
-        ================================================= */
-
-        const userAgent =
-            headers["user-agent"] || null;
-
-
-        /* =================================================
-           CLIENT DATA
-        ================================================= */
-
-        const data = req.body || {};
-
-
-        /* =================================================
-           ANALYTICS RECORD
-        ================================================= */
+        /* ===========================
+           VISITOR RECORD
+        =========================== */
 
         const visitor = {
-
-            /* ---------------------------------------------
-               IDENTITY / SESSION
-            --------------------------------------------- */
 
             visitorId:
                 data.visitorId || null,
 
-
-            /* ---------------------------------------------
-               TIME
-            --------------------------------------------- */
-
             timestamp:
                 new Date().toISOString(),
-
-            clientTimestamp:
-                data.timestamp || null,
-
-
-            /* ---------------------------------------------
-               PAGE
-            --------------------------------------------- */
 
             page:
                 data.page || null,
@@ -203,42 +155,24 @@ export default async function handler(req, res) {
             title:
                 data.title || null,
 
-
-            /* ---------------------------------------------
-               TRAFFIC SOURCE
-            --------------------------------------------- */
-
             referrer:
-                data.referrer || null,
-
-            utm:
-                data.utm || null,
-
-
-            /* ---------------------------------------------
-               NETWORK
-            --------------------------------------------- */
+                data.referrer || "direct",
 
             ip:
                 ip,
 
-
-            /* ---------------------------------------------
-               GEO
-            --------------------------------------------- */
+            network:
+                network,
 
             geo:
                 geo,
 
-
-            /* ---------------------------------------------
-               BROWSER
-            --------------------------------------------- */
-
             browser: {
 
                 userAgent:
-                    userAgent,
+                    data.userAgent ||
+                    headers["user-agent"] ||
+                    null,
 
                 platform:
                     data.platform || null,
@@ -251,34 +185,24 @@ export default async function handler(req, res) {
 
             },
 
-
-            /* ---------------------------------------------
-               DISPLAY
-            --------------------------------------------- */
-
             display: {
 
                 screenWidth:
-                    data.screenWidth || null,
+                    data.screenWidth ?? null,
 
                 screenHeight:
-                    data.screenHeight || null,
+                    data.screenHeight ?? null,
 
                 viewportWidth:
-                    data.viewportWidth || null,
+                    data.viewportWidth ?? null,
 
                 viewportHeight:
-                    data.viewportHeight || null,
+                    data.viewportHeight ?? null,
 
                 pixelRatio:
-                    data.pixelRatio || null
+                    data.pixelRatio ?? null
 
             },
-
-
-            /* ---------------------------------------------
-               DEVICE CAPABILITIES
-            --------------------------------------------- */
 
             device: {
 
@@ -286,64 +210,45 @@ export default async function handler(req, res) {
                     data.maxTouchPoints ?? null,
 
                 hardwareConcurrency:
-                    data.hardwareConcurrency ?? null,
+                    data.hardwareConcurrency ??
+                    null,
 
                 deviceMemory:
-                    data.deviceMemory ?? null,
+                    data.deviceMemory ??
+                    null,
 
                 cookieEnabled:
-                    data.cookieEnabled ?? null,
-
-                online:
-                    data.online ?? null
+                    data.cookieEnabled ??
+                    null
 
             },
 
+            connection:
+                data.connection || null,
 
-            /* ---------------------------------------------
-               TIMEZONE
-            --------------------------------------------- */
-
-            clientTimezone:
+            timezone:
                 data.timezone || null,
 
+            infrastructure: {
 
-            /* ---------------------------------------------
-               NETWORK API
-            --------------------------------------------- */
+                vercelId:
+                    headers["x-vercel-id"] || null,
 
-            connection: {
+                host:
+                    headers["host"] || null,
 
-                effectiveType:
-                    data.connection?.effectiveType || null,
+                protocol:
+                    headers["x-forwarded-proto"] ||
+                    null
 
-                downlink:
-                    data.connection?.downlink ?? null,
-
-                rtt:
-                    data.connection?.rtt ?? null,
-
-                saveData:
-                    data.connection?.saveData ?? null
-
-            },
-
-
-            /* ---------------------------------------------
-               VERCEL INFRASTRUCTURE
-            --------------------------------------------- */
-
-            infrastructure:
-                infrastructure
+            }
 
         };
 
 
-        /* =================================================
-           LOG EVERYTHING
-
-           Vercel Runtime Logs can display console output.
-        ================================================= */
+        /* ===========================
+           VERCEL LOG
+        =========================== */
 
         console.log(
             "========== HEISTSIXIN VISITOR =========="
@@ -358,14 +263,9 @@ export default async function handler(req, res) {
         );
 
 
-        /* =================================================
-           RESPONSE
-        ================================================= */
-
         return res.status(200).json({
 
             success: true,
-
             received: true
 
         });
@@ -381,7 +281,6 @@ export default async function handler(req, res) {
         return res.status(500).json({
 
             success: false,
-
             error: "Analytics server error"
 
         });
