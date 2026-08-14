@@ -1,5 +1,5 @@
 /* ===================================
-   HEISTSIXIN V4
+   HEISTSIXIN V5
 =================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,14 +11,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const loader = document.getElementById("loader");
 
     if (loader) {
+
         window.addEventListener("load", () => {
 
             setTimeout(() => {
+
                 loader.style.opacity = "0";
                 loader.style.visibility = "hidden";
+
             }, 2200);
 
         });
+
     }
 
 
@@ -44,26 +48,34 @@ document.addEventListener("DOMContentLoaded", () => {
        SCROLL REVEAL
     =========================== */
 
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver(
 
-        entries.forEach(entry => {
+        (entries) => {
 
-            if (entry.isIntersecting) {
+            entries.forEach((entry) => {
 
-                entry.target.classList.add("visible");
+                if (entry.isIntersecting) {
 
-            }
+                    entry.target.classList.add("visible");
 
-        });
+                }
 
-    }, {
-        threshold: 0.15
-    });
+            });
+
+        },
+
+        {
+            threshold: 0.15
+        }
+
+    );
 
 
     document
-        .querySelectorAll(".section,.book-card,.featured-book")
-        .forEach(el => {
+        .querySelectorAll(
+            ".section,.book-card,.featured-book"
+        )
+        .forEach((el) => {
 
             el.classList.add("hidden-section");
 
@@ -99,7 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
        HERO PARALLAX
     =========================== */
 
-    const hero = document.querySelector(".hero-gradient");
+    const hero =
+        document.querySelector(".hero-gradient");
 
     if (hero) {
 
@@ -130,29 +143,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
         for (let i = 0; i < 60; i++) {
 
-            const p = document.createElement("div");
+            const particle =
+                document.createElement("div");
 
-            p.className = "particle";
+            particle.className = "particle";
 
-            p.style.left =
+            particle.style.left =
                 Math.random() * 100 + "%";
 
             const size =
                 Math.random() * 3 + 1;
 
-            p.style.width = size + "px";
-            p.style.height = size + "px";
+            particle.style.width =
+                size + "px";
 
-            p.style.animationDuration =
+            particle.style.height =
+                size + "px";
+
+            particle.style.animationDuration =
                 (15 + Math.random() * 20) + "s";
 
-            p.style.animationDelay =
+            particle.style.animationDelay =
                 (-Math.random() * 20) + "s";
 
-            p.style.opacity =
+            particle.style.opacity =
                 Math.random() * 0.8 + 0.2;
 
-            particleContainer.appendChild(p);
+            particleContainer.appendChild(
+                particle
+            );
 
         }
 
@@ -214,8 +233,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* ===========================
+    /* =================================================
        HEISTSIXIN ANALYTICS
+    ================================================= */
+
+
+    /* ===========================
+       ANONYMOUS VISITOR ID
     =========================== */
 
     const visitorIdKey =
@@ -229,7 +253,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (
             window.crypto &&
-            typeof window.crypto.randomUUID === "function"
+            typeof window.crypto.randomUUID ===
+                "function"
         ) {
 
             visitorId =
@@ -255,12 +280,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* ===========================
-       COLLECT BASIC VISIT DATA
+       URL / CAMPAIGN DATA
+    =========================== */
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    const utm = {
+
+        source:
+            params.get("utm_source"),
+
+        medium:
+            params.get("utm_medium"),
+
+        campaign:
+            params.get("utm_campaign"),
+
+        term:
+            params.get("utm_term"),
+
+        content:
+            params.get("utm_content")
+
+    };
+
+
+    /* ===========================
+       NETWORK INFORMATION
+    =========================== */
+
+    let connection = null;
+
+    if (navigator.connection) {
+
+        connection = {
+
+            effectiveType:
+                navigator.connection
+                    .effectiveType || null,
+
+            downlink:
+                navigator.connection
+                    .downlink ?? null,
+
+            rtt:
+                navigator.connection
+                    .rtt ?? null,
+
+            saveData:
+                navigator.connection
+                    .saveData ?? null
+
+        };
+
+    }
+
+
+    /* ===========================
+       ANALYTICS DATA
     =========================== */
 
     const analyticsData = {
 
-        visitorId: visitorId,
+        /* Visitor */
+
+        visitorId:
+            visitorId,
+
+
+        /* Page */
 
         page:
             window.location.pathname,
@@ -268,8 +360,17 @@ document.addEventListener("DOMContentLoaded", () => {
         title:
             document.title,
 
+
+        /* Traffic */
+
         referrer:
             document.referrer || "direct",
+
+        utm:
+            utm,
+
+
+        /* Language */
 
         language:
             navigator.language || null,
@@ -278,6 +379,9 @@ document.addEventListener("DOMContentLoaded", () => {
             navigator.languages
                 ? navigator.languages.join(",")
                 : null,
+
+
+        /* Display */
 
         screenWidth:
             window.screen.width,
@@ -291,16 +395,58 @@ document.addEventListener("DOMContentLoaded", () => {
         viewportHeight:
             window.innerHeight,
 
+        pixelRatio:
+            window.devicePixelRatio || 1,
+
+
+        /* Device */
+
+        platform:
+            navigator.platform || null,
+
+        maxTouchPoints:
+            navigator.maxTouchPoints || 0,
+
+        hardwareConcurrency:
+            navigator.hardwareConcurrency ||
+            null,
+
+        deviceMemory:
+            navigator.deviceMemory ||
+            null,
+
+
+        /* Browser */
+
+        userAgent:
+            navigator.userAgent ||
+            null,
+
+
+        /* Browser capabilities */
+
+        cookieEnabled:
+            navigator.cookieEnabled,
+
+        online:
+            navigator.onLine,
+
+
+        /* Network */
+
+        connection:
+            connection,
+
+
+        /* Timezone */
+
         timezone:
             Intl.DateTimeFormat()
                 .resolvedOptions()
                 .timeZone || null,
 
-        platform:
-            navigator.platform || null,
 
-        userAgent:
-            navigator.userAgent || null,
+        /* Timestamp */
 
         timestamp:
             new Date().toISOString()
@@ -309,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* ===========================
-       SEND ANALYTICS EVENT
+       SEND ANALYTICS
     =========================== */
 
     fetch("/api/analytics", {
@@ -317,17 +463,26 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
 
         headers: {
-            "Content-Type": "application/json"
+
+            "Content-Type":
+                "application/json"
+
         },
 
         body:
-            JSON.stringify(analyticsData),
+            JSON.stringify(
+                analyticsData
+            ),
 
         keepalive: true
 
     }).catch(() => {
-        // Analytics failure should
-        // never break the website.
+
+        /*
+         * Analytics should NEVER
+         * break the main website.
+         */
+
     });
 
 
