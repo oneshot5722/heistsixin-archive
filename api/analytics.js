@@ -1,21 +1,18 @@
 export default async function handler(req, res) {
 
     if (req.method !== "POST") {
-
         return res.status(405).json({
             error: "Method not allowed"
         });
-
     }
 
     try {
 
         const data = req.body || {};
 
-        /*
-         * Vercel provides the connecting IP through
-         * the request headers.
-         */
+        /* ===========================
+           GET VISITOR IP
+        =========================== */
 
         const forwarded =
             req.headers["x-forwarded-for"];
@@ -26,9 +23,89 @@ export default async function handler(req, res) {
                 : req.socket?.remoteAddress || null;
 
 
-        /*
-         * Basic visitor information
-         */
+        /* ===========================
+           IP GEOLOCATION
+        =========================== */
+
+        let geo = null;
+
+        if (ip) {
+
+            try {
+
+                const response = await fetch(
+                    `https://ipwho.is/${encodeURIComponent(ip)}`
+                );
+
+                if (response.ok) {
+
+                    const location =
+                        await response.json();
+
+                    if (location.success !== false) {
+
+                        geo = {
+
+                            country:
+                                location.country || null,
+
+                            countryCode:
+                                location.country_code || null,
+
+                            region:
+                                location.region || null,
+
+                            city:
+                                location.city || null,
+
+                            postal:
+                                location.postal || null,
+
+                            latitude:
+                                location.latitude || null,
+
+                            longitude:
+                                location.longitude || null,
+
+                            timezone:
+                                location.timezone?.id || null,
+
+                            isp:
+                                location.connection?.isp || null,
+
+                            organization:
+                                location.connection?.org || null,
+
+                            asn:
+                                location.connection?.asn || null,
+
+                            domain:
+                                location.connection?.domain || null,
+
+                            connectionType:
+                                location.type || null
+
+                        };
+
+                    }
+
+                }
+
+            } catch (geoError) {
+
+                console.error(
+                    "Geolocation lookup failed:",
+                    geoError
+                );
+
+            }
+
+        }
+
+
+        /* ===========================
+           ANALYTICS EVENT
+        =========================== */
 
         const visitor = {
 
@@ -74,18 +151,16 @@ export default async function handler(req, res) {
                 data.platform || null,
 
             userAgent:
-                data.userAgent || null
+                data.userAgent || null,
+
+            geo: geo
 
         };
 
 
-        /*
-         * For now we return the event.
-         *
-         * Later we can connect this to
-         * persistent storage + your private
-         * analytics dashboard.
-         */
+        /* ===========================
+           TEMPORARY RESPONSE
+        =========================== */
 
         return res.status(200).json({
 
@@ -94,6 +169,7 @@ export default async function handler(req, res) {
             visitor: visitor
 
         });
+
 
     } catch (error) {
 
