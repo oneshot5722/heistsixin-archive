@@ -1,5 +1,6 @@
 export default async function handler(req, res) {
 
+    // Only accept POST requests
     if (req.method !== "POST") {
         return res.status(405).json({
             success: false,
@@ -11,6 +12,29 @@ export default async function handler(req, res) {
 
         const headers = req.headers || {};
         const data = req.body || {};
+
+        /* ===========================
+           ENVIRONMENT
+        =========================== */
+
+        const SUPABASE_URL =
+            process.env.SUPABASE_URL;
+
+        const SUPABASE_KEY =
+            process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (!SUPABASE_URL || !SUPABASE_KEY) {
+
+            console.error(
+                "Supabase environment variables are missing."
+            );
+
+            return res.status(500).json({
+                success: false,
+                error: "Analytics configuration error"
+            });
+        }
+
 
         /* ===========================
            CLIENT IP
@@ -26,115 +50,30 @@ export default async function handler(req, res) {
 
         /* ===========================
            VERCEL GEO
-           IP-derived and approximate
+           IP-DERIVED / APPROXIMATE
         =========================== */
 
-        const geo = {
+        const country =
+            headers["x-vercel-ip-country"] || null;
 
-            country:
-                headers["x-vercel-ip-country"] || null,
+        const region =
+            headers["x-vercel-ip-country-region"] || null;
 
-            region:
-                headers["x-vercel-ip-country-region"] || null,
+        const city =
+            headers["x-vercel-ip-city"]
+                ? decodeURIComponent(
+                    headers["x-vercel-ip-city"]
+                )
+                : null;
 
-            city:
-                headers["x-vercel-ip-city"]
-                    ? decodeURIComponent(
-                        headers["x-vercel-ip-city"]
-                    )
-                    : null,
+        const latitude =
+            headers["x-vercel-ip-latitude"] || null;
 
-            postalCode:
-                headers["x-vercel-ip-postal-code"] ||
-                null,
+        const longitude =
+            headers["x-vercel-ip-longitude"] || null;
 
-            latitude:
-                headers["x-vercel-ip-latitude"] ||
-                null,
-
-            longitude:
-                headers["x-vercel-ip-longitude"] ||
-                null,
-
-            timezone:
-                headers["x-vercel-ip-timezone"] ||
-                null,
-
-            continent:
-                headers["x-vercel-ip-continent"] ||
-                null
-        };
-
-
-        /* ===========================
-           IPINFO LITE
-        =========================== */
-
-        let network = null;
-
-        const token =
-            process.env.IPINFO_TOKEN;
-
-        if (ip && token) {
-
-            try {
-
-                const response = await fetch(
-                    `https://api.ipinfo.io/lite/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`
-                );
-
-                if (response.ok) {
-
-                    const info =
-                        await response.json();
-
-                    network = {
-
-                        ip:
-                            info.ip || ip,
-
-                        asn:
-                            info.asn || null,
-
-                        organization:
-                            info.as_name || null,
-
-                        domain:
-                            info.as_domain || null,
-
-                        country:
-                            info.country || null,
-
-                        countryCode:
-                            info.country_code || null,
-
-                        continent:
-                            info.continent || null,
-
-                        continentCode:
-                            info.continent_code || null
-
-                    };
-
-                } else {
-
-                    console.error(
-                        "IPinfo error:",
-                        response.status
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "IPinfo request failed:",
-                    error.message
-                );
-
-            }
-
-        }
+        const timezone =
+            headers["x-vercel-ip-timezone"] || null;
 
 
         /* ===========================
@@ -143,11 +82,8 @@ export default async function handler(req, res) {
 
         const visitor = {
 
-            visitorId:
+            visitor_id:
                 data.visitorId || null,
-
-            timestamp:
-                new Date().toISOString(),
 
             page:
                 data.page || null,
@@ -161,93 +97,102 @@ export default async function handler(req, res) {
             ip:
                 ip,
 
-            network:
-                network,
+            country:
+                country,
 
-            geo:
-                geo,
+            region:
+                region,
 
-            browser: {
+            city:
+                city,
 
-                userAgent:
-                    data.userAgent ||
-                    headers["user-agent"] ||
-                    null,
+            latitude:
+                latitude
+                    ? Number(latitude)
+                    : null,
 
-                platform:
-                    data.platform || null,
-
-                language:
-                    data.language || null,
-
-                languages:
-                    data.languages || null
-
-            },
-
-            display: {
-
-                screenWidth:
-                    data.screenWidth ?? null,
-
-                screenHeight:
-                    data.screenHeight ?? null,
-
-                viewportWidth:
-                    data.viewportWidth ?? null,
-
-                viewportHeight:
-                    data.viewportHeight ?? null,
-
-                pixelRatio:
-                    data.pixelRatio ?? null
-
-            },
-
-            device: {
-
-                touchPoints:
-                    data.maxTouchPoints ?? null,
-
-                hardwareConcurrency:
-                    data.hardwareConcurrency ??
-                    null,
-
-                deviceMemory:
-                    data.deviceMemory ??
-                    null,
-
-                cookieEnabled:
-                    data.cookieEnabled ??
-                    null
-
-            },
-
-            connection:
-                data.connection || null,
+            longitude:
+                longitude
+                    ? Number(longitude)
+                    : null,
 
             timezone:
-                data.timezone || null,
+                data.timezone ||
+                timezone ||
+                null,
 
-            infrastructure: {
+            user_agent:
+                data.userAgent ||
+                headers["user-agent"] ||
+                null,
 
-                vercelId:
-                    headers["x-vercel-id"] || null,
+            platform:
+                data.platform || null,
 
-                host:
-                    headers["host"] || null,
+            language:
+                data.language || null,
 
-                protocol:
-                    headers["x-forwarded-proto"] ||
-                    null
+            screen_width:
+                data.screenWidth ?? null,
 
-            }
-
+            screen_height:
+                data.screenHeight ?? null
         };
 
 
         /* ===========================
-           VERCEL LOG
+           SAVE TO SUPABASE
+        =========================== */
+
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/visitor_events`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    "apikey":
+                        SUPABASE_KEY,
+
+                    "Authorization":
+                        `Bearer ${SUPABASE_KEY}`,
+
+                    "Prefer":
+                        "return=minimal"
+                },
+
+                body:
+                    JSON.stringify(visitor)
+            }
+        );
+
+
+        /* ===========================
+           SUPABASE ERROR
+        =========================== */
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+            console.error(
+                "Supabase insert failed:",
+                response.status,
+                errorText
+            );
+
+            return res.status(500).json({
+                success: false,
+                error: "Database insert failed"
+            });
+        }
+
+
+        /* ===========================
+           SERVER LOG
         =========================== */
 
         console.log(
@@ -255,18 +200,25 @@ export default async function handler(req, res) {
         );
 
         console.log(
-            JSON.stringify(visitor, null, 2)
+            JSON.stringify(
+                visitor,
+                null,
+                2
+            )
         );
 
         console.log(
-            "========================================="
+            "========== SAVED TO SUPABASE =========="
         );
 
 
         return res.status(200).json({
 
             success: true,
-            received: true
+
+            received: true,
+
+            stored: true
 
         });
 
@@ -281,7 +233,9 @@ export default async function handler(req, res) {
         return res.status(500).json({
 
             success: false,
-            error: "Analytics server error"
+
+            error:
+                "Analytics server error"
 
         });
 
