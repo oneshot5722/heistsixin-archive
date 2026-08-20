@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
+
     /* ==========================================
-       HEISTSIXIN TELEMETRY API
-       Server-side collector
+       HEISTSIXIN TELEMETRY + TRAFFIC CLASSIFIER
     ========================================== */
 
     if (req.method !== "POST") {
@@ -12,7 +12,9 @@ export default async function handler(req, res) {
     }
 
     try {
+
         const headers = req.headers || {};
+
         const data =
             typeof req.body === "string"
                 ? JSON.parse(req.body || "{}")
@@ -30,7 +32,7 @@ export default async function handler(req, res) {
 
         if (!SUPABASE_URL || !SUPABASE_SECRET) {
             console.error(
-                "Missing Supabase server environment variables."
+                "Missing Supabase environment variables."
             );
 
             return res.status(500).json({
@@ -40,13 +42,13 @@ export default async function handler(req, res) {
         }
 
         /* ==========================================
-           REQUEST SIZE / BASIC VALIDATION
+           PAYLOAD VALIDATION
         ========================================== */
 
-        const serializedBody =
+        const serialized =
             JSON.stringify(data);
 
-        if (serializedBody.length > 100_000) {
+        if (serialized.length > 100000) {
             return res.status(413).json({
                 success: false,
                 error: "Telemetry payload too large"
@@ -60,21 +62,177 @@ export default async function handler(req, res) {
         const forwardedFor =
             headers["x-forwarded-for"];
 
-        const ip = forwardedFor
-            ? forwardedFor
-                .split(",")[0]
-                .trim()
-            : (
-                headers["x-real-ip"] ||
-                null
+        const ip =
+            forwardedFor
+                ? forwardedFor
+                    .split(",")[0]
+                    .trim()
+                : (
+                    headers["x-real-ip"] ||
+                    null
+                );
+
+        /* ==========================================
+           USER AGENT
+        ========================================== */
+
+        const userAgent =
+            String(
+                data.userAgent ||
+                headers["user-agent"] ||
+                ""
             );
+
+        const ua =
+            userAgent.toLowerCase();
+
+        /* ==========================================
+           AUTOMATION SIGNALS
+        ========================================== */
+
+        const detectionSignals = [];
+
+        let isHeadless = false;
+        let isBot = false;
+        let isAutomated = false;
+
+        if (
+            ua.includes("headlesschrome") ||
+            ua.includes("headless")
+        ) {
+            isHeadless = true;
+            isAutomated = true;
+
+            detectionSignals.push(
+                "headless-user-agent"
+            );
+        }
+
+        const botPatterns = [
+            "bot",
+            "crawler",
+            "spider",
+            "slurp",
+            "bingpreview",
+            "facebookexternalhit",
+            "linkedinbot",
+            "twitterbot",
+            "discordbot",
+            "telegrambot",
+            "google-inspectiontool"
+        ];
+
+        for (const pattern of botPatterns) {
+
+            if (ua.includes(pattern)) {
+
+                isBot = true;
+                isAutomated = true;
+
+                detectionSignals.push(
+                    `ua:${pattern}`
+                );
+
+            }
+
+        }
+
+        /* ==========================================
+           CLIENT-SIDE AUTOMATION SIGNALS
+        ========================================== */
+
+        if (
+            data.webdriver === true ||
+            data.automation === true
+        ) {
+
+            isAutomated = true;
+
+            detectionSignals.push(
+                "client-automation-flag"
+            );
+
+        }
+
+        if (
+            data.navigatorWebdriver === true
+        ) {
+
+            isAutomated = true;
+
+            detectionSignals.push(
+                "navigator-webdriver"
+            );
+
+        }
+
+        /* ==========================================
+           SUSPICIOUS DISPLAY / HEADLESS SIGNALS
+        ========================================== */
+
+        const screenWidth =
+            Number.isFinite(
+                Number(data.screenWidth)
+            )
+                ? Number(data.screenWidth)
+                : null;
+
+        const screenHeight =
+            Number.isFinite(
+                Number(data.screenHeight)
+            )
+                ? Number(data.screenHeight)
+                : null;
+
+        const viewportWidth =
+            Number.isFinite(
+                Number(data.viewportWidth)
+            )
+                ? Number(data.viewportWidth)
+                : null;
+
+        const viewportHeight =
+            Number.isFinite(
+                Number(data.viewportHeight)
+            )
+                ? Number(data.viewportHeight)
+                : null;
+
+        if (
+            screenWidth === 800 &&
+            screenHeight === 600 &&
+            viewportWidth === 1280 &&
+            viewportHeight === 800
+        ) {
+
+            detectionSignals.push(
+                "automation-like-display-profile"
+            );
+
+        }
+
+        /* ==========================================
+           TRAFFIC CLASSIFICATION
+        ========================================== */
+
+        let trafficType = "human";
+
+        if (isHeadless) {
+            trafficType = "automated";
+        }
+        else if (isBot) {
+            trafficType = "bot";
+        }
+        else if (isAutomated) {
+            trafficType = "automated";
+        }
 
         /* ==========================================
            VERCEL GEO
-           IP-DERIVED / APPROXIMATE
         ========================================== */
 
         const vercelGeo = {
+
             country:
                 headers["x-vercel-ip-country"] ||
                 null,
@@ -121,16 +279,20 @@ export default async function handler(req, res) {
             process.env.IPINFO_TOKEN;
 
         if (ip && ipinfoToken) {
+
             try {
-                const ipinfoResponse = await fetch(
+
+                const response = await fetch(
                     `https://api.ipinfo.io/lite/${encodeURIComponent(ip)}?token=${encodeURIComponent(ipinfoToken)}`
                 );
 
-                if (ipinfoResponse.ok) {
+                if (response.ok) {
+
                     const info =
-                        await ipinfoResponse.json();
+                        await response.json();
 
                     network = {
+
                         ip:
                             info.ip ||
                             ip,
@@ -162,30 +324,85 @@ export default async function handler(req, res) {
                         continentCode:
                             info.continent_code ||
                             null
+
                     };
+
                 } else {
+
                     console.error(
                         "IPinfo request failed:",
-                        ipinfoResponse.status
+                        response.status
                     );
+
                 }
+
             } catch (error) {
+
                 console.error(
                     "IPinfo error:",
                     error.message
                 );
+
             }
+
         }
 
         /* ==========================================
-           CLIENT TELEMETRY
-           Only copy fields we explicitly support.
+           GEO OBJECT
+        ========================================== */
+
+        const geo = {
+
+            source:
+                "ip-derived",
+
+            country:
+                vercelGeo.country ||
+                network?.countryCode ||
+                null,
+
+            region:
+                vercelGeo.region ||
+                null,
+
+            city:
+                vercelGeo.city ||
+                null,
+
+            postalCode:
+                vercelGeo.postalCode ||
+                null,
+
+            latitude:
+                vercelGeo.latitude !== null
+                    ? Number(vercelGeo.latitude)
+                    : null,
+
+            longitude:
+                vercelGeo.longitude !== null
+                    ? Number(vercelGeo.longitude)
+                    : null,
+
+            timezone:
+                data.timezone ||
+                vercelGeo.timezone ||
+                null,
+
+            continent:
+                vercelGeo.continent ||
+                network?.continent ||
+                null
+
+        };
+
+        /* ==========================================
+           BROWSER
         ========================================== */
 
         const browser = {
+
             userAgent:
-                data.userAgent ||
-                headers["user-agent"] ||
+                userAgent ||
                 null,
 
             platform:
@@ -197,75 +414,82 @@ export default async function handler(req, res) {
                 null,
 
             languages:
-                Array.isArray(data.languages)
+                Array.isArray(
+                    data.languages
+                )
                     ? data.languages
                     : null
+
         };
+
+        /* ==========================================
+           DISPLAY
+        ========================================== */
+
+        const pixelRatio =
+            Number.isFinite(
+                Number(data.pixelRatio)
+            )
+                ? Number(data.pixelRatio)
+                : null;
 
         const display = {
-            screenWidth:
-                Number.isFinite(
-                    Number(data.screenWidth)
-                )
-                    ? Number(data.screenWidth)
-                    : null,
 
-            screenHeight:
-                Number.isFinite(
-                    Number(data.screenHeight)
-                )
-                    ? Number(data.screenHeight)
-                    : null,
+            screenWidth,
 
-            viewportWidth:
-                Number.isFinite(
-                    Number(data.viewportWidth)
-                )
-                    ? Number(data.viewportWidth)
-                    : null,
+            screenHeight,
 
-            viewportHeight:
-                Number.isFinite(
-                    Number(data.viewportHeight)
-                )
-                    ? Number(data.viewportHeight)
-                    : null,
+            viewportWidth,
 
-            pixelRatio:
-                Number.isFinite(
-                    Number(data.pixelRatio)
-                )
-                    ? Number(data.pixelRatio)
-                    : null
+            viewportHeight,
+
+            pixelRatio
+
         };
 
+        /* ==========================================
+           DEVICE
+        ========================================== */
+
+        const touchPoints =
+            Number.isFinite(
+                Number(data.maxTouchPoints)
+            )
+                ? Number(data.maxTouchPoints)
+                : null;
+
+        const hardwareConcurrency =
+            Number.isFinite(
+                Number(data.hardwareConcurrency)
+            )
+                ? Number(data.hardwareConcurrency)
+                : null;
+
+        const deviceMemory =
+            Number.isFinite(
+                Number(data.deviceMemory)
+            )
+                ? Number(data.deviceMemory)
+                : null;
+
         const device = {
-            touchPoints:
-                Number.isFinite(
-                    Number(data.maxTouchPoints)
-                )
-                    ? Number(data.maxTouchPoints)
-                    : null,
 
-            hardwareConcurrency:
-                Number.isFinite(
-                    Number(data.hardwareConcurrency)
-                )
-                    ? Number(data.hardwareConcurrency)
-                    : null,
+            touchPoints,
 
-            deviceMemory:
-                Number.isFinite(
-                    Number(data.deviceMemory)
-                )
-                    ? Number(data.deviceMemory)
-                    : null,
+            hardwareConcurrency,
+
+            deviceMemory,
 
             cookieEnabled:
                 typeof data.cookieEnabled === "boolean"
                     ? data.cookieEnabled
                     : null
+
         };
+
+        /* ==========================================
+           OPTIONAL STRUCTURED DATA
+        ========================================== */
 
         const connection =
             data.connection &&
@@ -298,53 +522,11 @@ export default async function handler(req, res) {
                 : null;
 
         /* ==========================================
-           GEO OBJECT
-        ========================================== */
-
-        const geo = {
-            source: "ip-derived",
-
-            country:
-                vercelGeo.country ||
-                null,
-
-            region:
-                vercelGeo.region ||
-                null,
-
-            city:
-                vercelGeo.city ||
-                null,
-
-            postalCode:
-                vercelGeo.postalCode ||
-                null,
-
-            latitude:
-                vercelGeo.latitude !== null
-                    ? Number(vercelGeo.latitude)
-                    : null,
-
-            longitude:
-                vercelGeo.longitude !== null
-                    ? Number(vercelGeo.longitude)
-                    : null,
-
-            timezone:
-                data.timezone ||
-                vercelGeo.timezone ||
-                null,
-
-            continent:
-                vercelGeo.continent ||
-                null
-        };
-
-        /* ==========================================
            INFRASTRUCTURE
         ========================================== */
 
         const infrastructure = {
+
             vercelId:
                 headers["x-vercel-id"] ||
                 null,
@@ -356,10 +538,11 @@ export default async function handler(req, res) {
             protocol:
                 headers["x-forwarded-proto"] ||
                 null
+
         };
 
         /* ==========================================
-           SESSION / REQUEST
+           REQUEST DATA
         ========================================== */
 
         const visitorId =
@@ -392,11 +575,17 @@ export default async function handler(req, res) {
         ========================================== */
 
         const databaseRow = {
-            visitor_id: visitorId,
-            session_id: sessionId,
+
+            visitor_id:
+                visitorId,
+
+            session_id:
+                sessionId,
 
             page,
+
             title,
+
             referrer,
 
             ip,
@@ -509,11 +698,42 @@ export default async function handler(req, res) {
 
             infrastructure,
 
+            traffic_type:
+                trafficType,
+
+            is_bot:
+                isBot,
+
+            is_headless:
+                isHeadless,
+
+            is_automated:
+                isAutomated,
+
+            detection_signals:
+                detectionSignals,
+
             raw_event: {
+
                 receivedAt:
                     new Date().toISOString(),
 
+                traffic: {
+
+                    trafficType,
+
+                    isBot,
+
+                    isHeadless,
+
+                    isAutomated,
+
+                    detectionSignals
+
+                },
+
                 request: {
+
                     method:
                         req.method,
 
@@ -526,6 +746,7 @@ export default async function handler(req, res) {
                     visitorId,
 
                     sessionId
+
                 },
 
                 network,
@@ -549,40 +770,46 @@ export default async function handler(req, res) {
                 consent,
 
                 infrastructure
+
             }
+
         };
 
         /* ==========================================
            WRITE TO SUPABASE
         ========================================== */
 
-        const supabaseResponse = await fetch(
-            `${SUPABASE_URL}/rest/v1/visitor_events`,
-            {
-                method: "POST",
+        const supabaseResponse =
+            await fetch(
+                `${SUPABASE_URL}/rest/v1/visitor_events`,
+                {
+                    method: "POST",
 
-                headers: {
-                    "Content-Type":
-                        "application/json",
+                    headers: {
 
-                    "apikey":
-                        SUPABASE_SECRET,
+                        "Content-Type":
+                            "application/json",
 
-                    "Authorization":
-                        `Bearer ${SUPABASE_SECRET}`,
+                        "apikey":
+                            SUPABASE_SECRET,
 
-                    "Prefer":
-                        "return=minimal"
-                },
+                        "Authorization":
+                            `Bearer ${SUPABASE_SECRET}`,
 
-                body:
-                    JSON.stringify(
-                        databaseRow
-                    )
-            }
-        );
+                        "Prefer":
+                            "return=minimal"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            databaseRow
+                        )
+                }
+            );
 
         if (!supabaseResponse.ok) {
+
             const errorText =
                 await supabaseResponse.text();
 
@@ -593,13 +820,18 @@ export default async function handler(req, res) {
             );
 
             return res.status(500).json({
+
                 success: false,
-                error: "Database insert failed"
+
+                error:
+                    "Database insert failed"
+
             });
+
         }
 
         /* ==========================================
-           VERCEL LOG
+           SERVER LOG
         ========================================== */
 
         console.log(
@@ -615,24 +847,43 @@ export default async function handler(req, res) {
         );
 
         console.log(
-            "========== STORED =========="
+            "=========================================="
         );
 
         return res.status(200).json({
+
             success: true,
+
             received: true,
-            stored: true
+
+            stored: true,
+
+            trafficType,
+
+            isBot,
+
+            isHeadless,
+
+            isAutomated
+
         });
 
     } catch (error) {
+
         console.error(
             "HEISTSIXIN ANALYTICS ERROR:",
             error
         );
 
         return res.status(500).json({
+
             success: false,
-            error: "Analytics server error"
+
+            error:
+                "Analytics server error"
+
         });
+
     }
+
 }
