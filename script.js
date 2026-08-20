@@ -1,5 +1,5 @@
 /* ===================================
-   HEISTSIXIN V5
+   HEISTSIXIN V6
 =================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -248,7 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let visitorId =
         localStorage.getItem(visitorIdKey);
 
-
     if (!visitorId) {
 
         if (
@@ -280,6 +279,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* ===========================
+       SESSION ID
+    =========================== */
+
+    const sessionIdKey =
+        "heistsixin_session_id";
+
+    let sessionId =
+        sessionStorage.getItem(sessionIdKey);
+
+    if (!sessionId) {
+
+        if (
+            window.crypto &&
+            typeof window.crypto.randomUUID ===
+                "function"
+        ) {
+
+            sessionId =
+                window.crypto.randomUUID();
+
+        } else {
+
+            sessionId =
+                Date.now().toString(36) +
+                "-" +
+                Math.random()
+                    .toString(36)
+                    .substring(2);
+
+        }
+
+        sessionStorage.setItem(
+            sessionIdKey,
+            sessionId
+        );
+
+    }
+
+
+    /* ===========================
        URL / CAMPAIGN DATA
     =========================== */
 
@@ -287,7 +326,6 @@ document.addEventListener("DOMContentLoaded", () => {
         new URLSearchParams(
             window.location.search
         );
-
 
     const utm = {
 
@@ -341,149 +379,460 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* ===========================
-       ANALYTICS DATA
+       BROWSER PREFERENCES
     =========================== */
 
-    const analyticsData = {
+    const preferences = {
 
-        /* Visitor */
+        colorScheme:
 
-        visitorId:
-            visitorId,
+            window.matchMedia &&
+            window.matchMedia(
+                "(prefers-color-scheme: dark)"
+            ).matches
+                ? "dark"
+                : "light",
 
+        reducedMotion:
 
-        /* Page */
-
-        page:
-            window.location.pathname,
-
-        title:
-            document.title,
-
-
-        /* Traffic */
-
-        referrer:
-            document.referrer || "direct",
-
-        utm:
-            utm,
-
-
-        /* Language */
-
-        language:
-            navigator.language || null,
-
-        languages:
-            navigator.languages
-                ? navigator.languages.join(",")
+            window.matchMedia
+                ? window.matchMedia(
+                    "(prefers-reduced-motion: reduce)"
+                ).matches
                 : null,
 
+        reducedTransparency:
 
-        /* Display */
-
-        screenWidth:
-            window.screen.width,
-
-        screenHeight:
-            window.screen.height,
-
-        viewportWidth:
-            window.innerWidth,
-
-        viewportHeight:
-            window.innerHeight,
-
-        pixelRatio:
-            window.devicePixelRatio || 1,
-
-
-        /* Device */
-
-        platform:
-            navigator.platform || null,
-
-        maxTouchPoints:
-            navigator.maxTouchPoints || 0,
-
-        hardwareConcurrency:
-            navigator.hardwareConcurrency ||
-            null,
-
-        deviceMemory:
-            navigator.deviceMemory ||
-            null,
-
-
-        /* Browser */
-
-        userAgent:
-            navigator.userAgent ||
-            null,
-
-
-        /* Browser capabilities */
-
-        cookieEnabled:
-            navigator.cookieEnabled,
-
-        online:
-            navigator.onLine,
-
-
-        /* Network */
-
-        connection:
-            connection,
-
-
-        /* Timezone */
-
-        timezone:
-            Intl.DateTimeFormat()
-                .resolvedOptions()
-                .timeZone || null,
-
-
-        /* Timestamp */
-
-        timestamp:
-            new Date().toISOString()
+            window.matchMedia
+                ? window.matchMedia(
+                    "(prefers-reduced-transparency: reduce)"
+                ).matches
+                : null
 
     };
 
 
     /* ===========================
-       SEND ANALYTICS
+       NAVIGATOR / AUTOMATION
     =========================== */
 
-    fetch("/api/analytics", {
+    const navigatorWebdriver =
+        navigator.webdriver === true;
 
-        method: "POST",
+    const automationSignals = {
 
-        headers: {
+        webdriver:
+            navigatorWebdriver,
 
-            "Content-Type":
-                "application/json"
+        languageCount:
+            Array.isArray(
+                navigator.languages
+            )
+                ? navigator.languages.length
+                : null,
 
-        },
+        hardwareConcurrency:
+            navigator.hardwareConcurrency ||
+            null,
 
-        body:
-            JSON.stringify(
-                analyticsData
-            ),
+        maxTouchPoints:
+            navigator.maxTouchPoints ||
+            0
 
-        keepalive: true
+    };
 
-    }).catch(() => {
 
-        /*
-         * Analytics should NEVER
-         * break the main website.
-         */
+    /* ===========================
+       PERFORMANCE
+    =========================== */
 
-    });
+    const getPerformanceData = () => {
 
+        if (!window.performance) {
+            return null;
+        }
+
+        const navigation =
+            performance.getEntriesByType(
+                "navigation"
+            )[0];
+
+        if (!navigation) {
+            return null;
+        }
+
+        return {
+
+            type:
+                navigation.type || null,
+
+            startTime:
+                navigation.startTime ?? null,
+
+            duration:
+                navigation.duration ?? null,
+
+            domInteractive:
+                navigation.domInteractive ?? null,
+
+            domContentLoaded:
+                navigation.domContentLoadedEventEnd ?? null,
+
+            loadEventEnd:
+                navigation.loadEventEnd ?? null,
+
+            responseStart:
+                navigation.responseStart ?? null,
+
+            responseEnd:
+                navigation.responseEnd ?? null,
+
+            transferSize:
+                navigation.transferSize ?? null,
+
+            encodedBodySize:
+                navigation.encodedBodySize ?? null,
+
+            decodedBodySize:
+                navigation.decodedBodySize ?? null
+
+        };
+
+    };
+
+
+    /* ===========================
+       PRECISE LOCATION
+       =========================== */
+
+    const locationData = {
+
+        preciseLatitude:
+            null,
+
+        preciseLongitude:
+            null,
+
+        locationAccuracy:
+            null,
+
+        locationSource:
+            "not-requested",
+
+        locationPermission:
+            "unknown"
+
+    };
+
+
+    const requestPreciseLocation = () => {
+
+        return new Promise((resolve) => {
+
+            if (!navigator.geolocation) {
+
+                locationData.locationSource =
+                    "unsupported";
+
+                locationData.locationPermission =
+                    "unsupported";
+
+                resolve();
+
+                return;
+
+            }
+
+            navigator.geolocation.getCurrentPosition(
+
+                (position) => {
+
+                    locationData.preciseLatitude =
+                        position.coords.latitude;
+
+                    locationData.preciseLongitude =
+                        position.coords.longitude;
+
+                    locationData.locationAccuracy =
+                        position.coords.accuracy;
+
+                    locationData.locationSource =
+                        "browser-geolocation";
+
+                    locationData.locationPermission =
+                        "granted";
+
+                    resolve();
+
+                },
+
+                (error) => {
+
+                    locationData.locationSource =
+                        "unavailable";
+
+                    if (
+                        error.code === 1
+                    ) {
+
+                        locationData.locationPermission =
+                            "denied";
+
+                    }
+                    else if (
+                        error.code === 2
+                    ) {
+
+                        locationData.locationPermission =
+                            "unavailable";
+
+                    }
+                    else if (
+                        error.code === 3
+                    ) {
+
+                        locationData.locationPermission =
+                            "timeout";
+
+                    }
+
+                    resolve();
+
+                },
+
+                {
+
+                    enableHighAccuracy:
+                        true,
+
+                    timeout:
+                        10000,
+
+                    maximumAge:
+                        0
+
+                }
+
+            );
+
+        });
+
+    };
+
+
+    /* =================================================
+       SEND ANALYTICS
+    ================================================= */
+
+    const sendAnalytics = async () => {
+
+        const analyticsData = {
+
+            /* Visitor */
+
+            visitorId:
+                visitorId,
+
+            sessionId:
+                sessionId,
+
+
+            /* Page */
+
+            page:
+                window.location.pathname,
+
+            title:
+                document.title,
+
+
+            /* Traffic */
+
+            referrer:
+                document.referrer || "direct",
+
+            utm:
+                utm,
+
+
+            /* Language */
+
+            language:
+                navigator.language || null,
+
+            languages:
+                navigator.languages
+                    ? Array.from(
+                        navigator.languages
+                    )
+                    : null,
+
+
+            /* Display */
+
+            screenWidth:
+                window.screen.width,
+
+            screenHeight:
+                window.screen.height,
+
+            viewportWidth:
+                window.innerWidth,
+
+            viewportHeight:
+                window.innerHeight,
+
+            pixelRatio:
+                window.devicePixelRatio || 1,
+
+
+            /* Device */
+
+            platform:
+                navigator.platform || null,
+
+            maxTouchPoints:
+                navigator.maxTouchPoints || 0,
+
+            hardwareConcurrency:
+                navigator.hardwareConcurrency ||
+                null,
+
+            deviceMemory:
+                navigator.deviceMemory ||
+                null,
+
+
+            /* Browser */
+
+            userAgent:
+                navigator.userAgent ||
+                null,
+
+
+            /* Browser capabilities */
+
+            cookieEnabled:
+                navigator.cookieEnabled,
+
+            online:
+                navigator.onLine,
+
+
+            /* Automation */
+
+            navigatorWebdriver:
+                navigatorWebdriver,
+
+            webdriver:
+                navigatorWebdriver,
+
+            automation:
+                navigatorWebdriver,
+
+            automationSignals:
+                automationSignals,
+
+
+            /* Network */
+
+            connection:
+                connection,
+
+
+            /* Preferences */
+
+            preferences:
+                preferences,
+
+
+            /* Performance */
+
+            performance:
+                getPerformanceData(),
+
+
+            /* Precise location */
+
+            preciseLatitude:
+                locationData.preciseLatitude,
+
+            preciseLongitude:
+                locationData.preciseLongitude,
+
+            locationAccuracy:
+                locationData.locationAccuracy,
+
+            locationSource:
+                locationData.locationSource,
+
+            locationPermission:
+                locationData.locationPermission,
+
+
+            /* Timezone */
+
+            timezone:
+                Intl.DateTimeFormat()
+                    .resolvedOptions()
+                    .timeZone || null,
+
+
+            /* Timestamp */
+
+            timestamp:
+                new Date().toISOString()
+
+        };
+
+
+        try {
+
+            await fetch(
+                "/api/analytics",
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(
+                            analyticsData
+                        ),
+
+                    keepalive:
+                        true
+
+                }
+            );
+
+        } catch (error) {
+
+            /*
+             * Analytics should NEVER
+             * break the website.
+             */
+
+        }
+
+    };
+
+
+    /* ===========================
+       LOCATION + ANALYTICS START
+    =========================== */
+
+    requestPreciseLocation()
+        .finally(() => {
+
+            sendAnalytics();
+
+        });
 
 });
